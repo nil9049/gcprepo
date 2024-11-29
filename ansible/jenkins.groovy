@@ -1,72 +1,68 @@
 pipeline {
     agent any
-    environment {
-        ANSIBLE_INVENTORY = 'ansible/inventory'  // Path to your inventory file
-    }
     parameters {
+        // Parameter for selecting the playbook
         choice(name: 'PLAYBOOK', choices: ['install_packages', 'multiple_packages'], description: 'Select the playbook to execute')
+
+        // Dynamically set choices for PACKAGES based on the selected PLAYBOOK
+        activeChoiceParam(name: 'PACKAGES') {
+            description('Select a package to install')
+            filterable()
+            groovyScript {
+                script("""
+                    if (PLAYBOOK == 'install_packages') {
+                        return ['apache2'] // Show only apache2 for the first playbook
+                    } else if (PLAYBOOK == 'multiple_packages') {
+                        return ['nginx', 'mysql', 'postgresql'] // Show other packages for the second playbook
+                    }
+                    return [] // Default empty list if no playbook is selected
+                """)
+                fallbackScript("return []") // Fallback if the script fails
+            }
+        }
+
+        // Dynamically set choices for SERVICES based on the selected PLAYBOOK
+        activeChoiceParam(name: 'SERVICES') {
+            description('Select a service to restart')
+            filterable()
+            groovyScript {
+                script("""
+                    if (PLAYBOOK == 'install_packages') {
+                        return ['apache2'] // Show apache2 for the first playbook
+                    } else if (PLAYBOOK == 'multiple_packages') {
+                        return ['apache2', 'nginx', 'mysql', 'postgresql'] // Show other services for multiple packages playbook
+                    }
+                    return [] // Default empty list if no playbook is selected
+                """)
+                fallbackScript("return []") // Fallback if the script fails
+            }
+        }
     }
     stages {
-        stage('Define Parameters') {
+        stage('Clone Repository') {
             steps {
-                script {
-                    // Active Choice for PACKAGES
-                    properties([
-                        parameters([
-                            activeChoiceParam(name: 'PACKAGES') {
-                                description('Select a package to install')
-                                filterable()
-                                groovyScript {
-                                    script("""
-                                        if (PLAYBOOK == 'install_packages') {
-                                            return ['apache2']
-                                        } else if (PLAYBOOK == 'multiple_packages') {
-                                            return ['nginx', 'mysql', 'postgresql']
-                                        } else {
-                                            return []
-                                        }
-                                    """)
-                                    fallbackScript('return ["apache2"]')
-                                }
-                            },
-
-                            // Active Choice for SERVICES
-                            activeChoiceParam(name: 'SERVICES') {
-                                description('Select a service to restart')
-                                filterable()
-                                groovyScript {
-                                    script("""
-                                        if (PLAYBOOK == 'install_packages') {
-                                            return ['apache2']
-                                        } else if (PLAYBOOK == 'multiple_packages') {
-                                            return ['apache2', 'nginx', 'mysql', 'postgresql']
-                                        } else {
-                                            return []
-                                        }
-                                    """)
-                                    fallbackScript('return ["apache2"]')
-                                }
-                            }
-                        ])
-                    ])
-                }
+                git branch: 'main',
+                    url: 'https://github.com/nil9049/gcprepo.git'
             }
         }
         stage('Run Ansible Playbook') {
             steps {
                 script {
                     // Map the playbook name to its path
-                    playbookPath = [
+                    playbookMap = [
                         'install_packages': 'ansible/install_packages.yml',
                         'multiple_packages': 'ansible/multiple_packages.yml'
-                    ][PLAYBOOK]
+                    ]
+                    // Determine the path based on selected PLAYBOOK
+                    playbookPath = playbookMap[PLAYBOOK]
 
+                    // Get selected values for PACKAGE and SERVICE
                     selectedPackage = PACKAGES
                     selectedService = SERVICES
 
-                    // Run the selected playbook with the provided packages and services
+                    // Run the Ansible playbook with extra-vars
                     sh """
-                    ansible-playbook -i ${ANSIBLE_INVENTORY} ${playbookPath} \
+                    ansible-playbook -i ansible/inventory ${playbookPath} \
                     --extra-vars "package=${selectedPackage} service=${selectedService}"
                     """
                 }
