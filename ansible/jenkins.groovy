@@ -44,18 +44,18 @@ pipeline {
                         'multiple_packages': 'ansible/multiple_packages.yml'
                     ][params.PLAYBOOK]
 
-                    package = params.PACKAGES
-                    service = params.SERVICES
+                    selectedPackage = params.PACKAGES  // Renamed from 'package' to 'selectedPackage'
+                    selectedService = params.SERVICES  // Renamed from 'service' to 'selectedService'
 
                     // If installing 'apache2', automatically set 'apache2' service to restart
-                    if (package == 'apache2' && params.PLAYBOOK == 'install_packages') {
-                        service = 'apache2'
+                    if (selectedPackage == 'apache2' && params.PLAYBOOK == 'install_packages') {
+                        selectedService = 'apache2'
                     }
 
                     // Execute the selected playbook with extra-vars
                     sh """
                     ansible-playbook -i ${ANSIBLE_INVENTORY} ${playbookPath} \
-                    --extra-vars "package=${package} service=${service}"
+                    --extra-vars "package=${selectedPackage} service=${selectedService}"
                     """
                 }
             }
