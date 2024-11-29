@@ -26,9 +26,9 @@ pipeline {
                         ]
                     )
 
-                    // Assign user selections to environment variables
-                    env.PACKAGES = userInput['PACKAGES']
-                    env.SERVICES = userInput['SERVICES']
+                    // Assign user selections to environment variables and ensure they are lists
+                    env.PACKAGES = userInput['PACKAGES'].split(',').collect { it.trim() }
+                    env.SERVICES = userInput['SERVICES'].split(',').collect { it.trim() }
                 }
             }
         }
@@ -52,7 +52,7 @@ pipeline {
                     // Run the Ansible playbook with extra-vars
                     sh """
                     ansible-playbook -i ansible/inventory ${playbookPath} \
-                    --extra-vars "packages=${env.PACKAGES} services=${env.SERVICES}"
+                    --extra-vars "packages=${env.PACKAGES.join(',')} services=${env.SERVICES.join(',')}"
                     """
                 }
             }
