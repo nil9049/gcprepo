@@ -2,7 +2,7 @@ pipeline {
     agent any
     parameters {
         // Parameter for selecting the playbook
-        choice(name: 'PACKAGE', choices: ['nginx', 'mysql', 'postgresql'], description: 'Select a package to install')
+        choice(name: 'PACKAGE', choices: ['apache2','nginx', 'mysql', 'postgresql'], description: 'Select a package to install')
         choice(name: 'SERVICE', choices: ['apache2', 'nginx', 'mysql', 'postgresql'], description: 'Select a service to restart')
     }
     stages {
