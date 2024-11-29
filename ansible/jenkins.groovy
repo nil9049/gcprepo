@@ -18,16 +18,16 @@ pipeline {
         stage('Run Ansible Playbook') {
             steps {
                 script {
-                    // Map the selected playbook to its full path
-                    def playbookMap = [
+                    // Define a map of playbook choices
+                    playbookMap = [
                         'install_packages': 'ansible/playbook.yml',    // Corrected the typo here
                         'multiple_packages': 'ansible/configure_services.yml'
                     ]
                     
                     // Fetch the selected package and service
-                    def package = params.PACKAGES
-                    def service = params.SERVICES
-                    def playbookPath = playbookMap[params.PLAYBOOK]  // Get the mapped playbook path
+                    package = params.PACKAGES
+                    service = params.SERVICES
+                    playbookPath = playbookMap[params.PLAYBOOK]  // Get the mapped playbook path
 
                     // Execute the selected playbook with extra-vars
                     sh """
