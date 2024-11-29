@@ -2,57 +2,60 @@ pipeline {
     agent any
     parameters {
         choice(name: 'PLAYBOOK', choices: ['install_packages', 'multiple_packages'], description: 'Select the playbook to execute')
-        
-        // Initially, PACKAGES and SERVICES will be empty, they will be populated dynamically based on the selected playbook
-        choice(name: 'PACKAGES', choices: [], description: 'Select a package to install')
-        
-        choice(name: 'SERVICES', choices: [], description: 'Select a service to restart')
-    }
-    stages {
-        stage('Set Dynamic Parameters') {
-            steps {
-                script {
-                    // Dynamically set the available packages and services based on selected playbook
-                    if (params.PLAYBOOK == 'install_packages') {
-                        // If 'install_packages' is selected, only allow the 'apache2' package and 'apache2' service
-                        currentBuild.description = "Installing Apache"
-                        // Set the PACKAGES and SERVICES choice dynamically
-                        currentBuild.rawBuild.addAction(new ParametersAction([
-                            new ChoiceParameterValue("PACKAGES", "apache2"),
-                            new ChoiceParameterValue("SERVICES", "apache2")
-                        ]))
-                    } 
-                    else if (params.PLAYBOOK == 'multiple_packages') {
-                        // If 'multiple_packages' is selected, show multiple packages and services
-                        currentBuild.description = "Installing Multiple Packages"
-                        // Set the PACKAGES and SERVICES choice dynamically
-                        currentBuild.rawBuild.addAction(new ParametersAction([
-                            new ChoiceParameterValue("PACKAGES", "nginx, mysql, postgresql"),
-                            new ChoiceParameterValue("SERVICES", "apache2, nginx, mysql, postgresql")
-                        ]))
+
+        // Active choice for PACKAGES that updates based on the PLAYBOOK selection
+        activeChoiceParam(name: 'PACKAGES') {
+            description('Select a package to install')
+            filterable()
+            groovyScript {
+                script("""
+                    if (PLAYBOOK == 'install_packages') {
+                        return ['apache2']
+                    } else if (PLAYBOOK == 'multiple_packages') {
+                        return ['nginx', 'mysql', 'postgresql']
+                    } else {
+                        return []
                     }
-                }
+                """)
+                fallbackScript('return ["apache2"]')
             }
         }
 
+        // Active choice for SERVICES that updates based on the PLAYBOOK selection
+        activeChoiceParam(name: 'SERVICES') {
+            description('Select a service to restart')
+            filterable()
+            groovyScript {
+                script("""
+                    if (PLAYBOOK == 'install_packages') {
+                        return ['apache2']
+                    } else if (PLAYBOOK == 'multiple_packages') {
+                        return ['apache2', 'nginx', 'mysql', 'postgresql']
+                    } else {
+                        return []
+                    }
+                """)
+                fallbackScript('return ["apache2"]')
+            }
+        }
+    }
+    environment {
+        ANSIBLE_INVENTORY = 'ansible/inventory'  // Path to your inventory file
+    }
+    stages {
         stage('Run Ansible Playbook') {
             steps {
                 script {
-                    // Determine the playbook path based on the selected playbook
+                    // Map the playbook name to its path
                     playbookPath = [
                         'install_packages': 'ansible/install_packages.yml',
                         'multiple_packages': 'ansible/multiple_packages.yml'
-                    ][params.PLAYBOOK]
+                    ][PLAYBOOK]
 
-                    selectedPackage = params.PACKAGES  // Renamed from 'package' to 'selectedPackage'
-                    selectedService = params.SERVICES  // Renamed from 'service' to 'selectedService'
+                    selectedPackage = PACKAGES
+                    selectedService = SERVICES
 
-                    // If installing 'apache2', automatically set 'apache2' service to restart
-                    if (selectedPackage == 'apache2' && params.PLAYBOOK == 'install_packages') {
-                        selectedService = 'apache2'
-                    }
-
-                    // Execute the selected playbook with extra-vars
+                    // Run the selected playbook with the provided packages and services
                     sh """
                     ansible-playbook -i ${ANSIBLE_INVENTORY} ${playbookPath} \
                     --extra-vars "package=${selectedPackage} service=${selectedService}"
