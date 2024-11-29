@@ -2,8 +2,8 @@ pipeline {
     agent any
 
     environment {
-        ANSIBLE_INVENTORY = 'inventory'  // Relative path to inventory file
-        PLAYBOOK = 'playbook.yml'         // Playbook file name
+        ANSIBLE_INVENTORY = 'ansible/inventory'  // Relative path to inventory file
+        PLAYBOOK = 'ansible/playbook.yml'         // Playbook file name
     }
 
     stages {
