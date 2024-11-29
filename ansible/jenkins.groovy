@@ -6,33 +6,32 @@ pipeline {
         choice(name: 'PLAYBOOK', choices: ['install_packages', 'multiple_packages'], description: 'Select the playbook to execute')
     }
     environment {
-        ANSIBLE_INVENTORY = 'ansible/inventory'  // Define the inventory path
+        ANSIBLE_INVENTORY = 'ansible/inventory'  // Set the inventory path
     }
     stages {
         stage('Clone Repository') {
             steps {
-                git branch: 'main',
-                    url: 'https://github.com/nil9049/gcprepo.git'
+                git branch: 'main', url: 'https://github.com/nil9049/gcprepo.git'
             }
         }
         stage('Run Ansible Playbook') {
             steps {
                 script {
-                    // Define a map of playbook choices
-                    playbookMap = [
-                        'install_packages': 'ansible/playbook.yml',    // Corrected the typo here
+                    // Map the selected playbook to its full path
+                    def playbookMap = [
+                        'install_packages': 'ansible/playbook.yml',
                         'multiple_packages': 'ansible/configure_services.yml'
                     ]
                     
-                    // Fetch the selected package and service
-                    package = params.PACKAGES
-                    service = params.SERVICES
-                    playbookPath = playbookMap[params.PLAYBOOK]  // Get the mapped playbook path
+                    // Get selected package and service values
+                    def selectedPackage = params.PACKAGES
+                    def service = params.SERVICES
+                    def playbookPath = playbookMap[params.PLAYBOOK]  // Get the mapped playbook path
 
                     // Execute the selected playbook with extra-vars
                     sh """
                     ansible-playbook -i ${ANSIBLE_INVENTORY} ${playbookPath} \
-                    --extra-vars "package=${package} service=${service}"
+                    --extra-vars "package=${selectedPackage} service=${service}"
                     """
                 }
             }
