@@ -43,8 +43,8 @@ pipeline {
                 script {
                     // Map the playbook name to its path
                     playbookMap = [
-                        'install_packages': 'ansible/install_packages.yml',
-                        'multiple_packages': 'ansible/multiple_packages.yml'
+                        'install_packages': 'ansible/playbook.yml',
+                        'multiple_packages': 'ansible/playbook2.yml'
                     ]
                     // Determine the path based on selected PLAYBOOK
                     playbookPath = playbookMap[params.PLAYBOOK]
