@@ -27,8 +27,8 @@ pipeline {
                     )
 
                     // Assign user selections to environment variables
-                    env.PACKAGES = userInput.PACKAGES
-                    env.SERVICES = userInput.SERVICES
+                    env.PACKAGES = userInput['PACKAGES']
+                    env.SERVICES = userInput['SERVICES']
                 }
             }
         }
