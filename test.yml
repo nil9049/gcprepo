@@ -1,0 +1,6 @@
+---
+- name: Example Playbook
+  hosts: myservers
+  tasks:
+    - name: Test Connectivity
+      ping:

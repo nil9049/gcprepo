@@ -1,0 +1,3 @@
+[myservers]
+10.128.0.6 ansible_user=nghuge7583
+
