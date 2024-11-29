@@ -3,42 +3,35 @@ pipeline {
     parameters {
         // Parameter for selecting the playbook
         choice(name: 'PLAYBOOK', choices: ['install_packages', 'multiple_packages'], description: 'Select the playbook to execute')
-
-        // Dynamically set choices for PACKAGES based on the selected PLAYBOOK
-        activeChoiceParam(name: 'PACKAGES') {
-            description('Select a package to install')
-            filterable()
-            groovyScript {
-                script("""
-                    if (PLAYBOOK == 'install_packages') {
-                        return ['apache2'] // Show only apache2 for the first playbook
-                    } else if (PLAYBOOK == 'multiple_packages') {
-                        return ['nginx', 'mysql', 'postgresql'] // Show other packages for the second playbook
-                    }
-                    return [] // Default empty list if no playbook is selected
-                """)
-                fallbackScript("return []") // Fallback if the script fails
-            }
-        }
-
-        // Dynamically set choices for SERVICES based on the selected PLAYBOOK
-        activeChoiceParam(name: 'SERVICES') {
-            description('Select a service to restart')
-            filterable()
-            groovyScript {
-                script("""
-                    if (PLAYBOOK == 'install_packages') {
-                        return ['apache2'] // Show apache2 for the first playbook
-                    } else if (PLAYBOOK == 'multiple_packages') {
-                        return ['apache2', 'nginx', 'mysql', 'postgresql'] // Show other services for multiple packages playbook
-                    }
-                    return [] // Default empty list if no playbook is selected
-                """)
-                fallbackScript("return []") // Fallback if the script fails
-            }
-        }
     }
     stages {
+        stage('Input Parameters') {
+            steps {
+                script {
+                    // Initialize variables for available packages and services
+                    if (params.PLAYBOOK == 'install_packages') {
+                        availablePackages = ['apache2']
+                        availableServices = ['apache2']
+                    } else if (params.PLAYBOOK == 'multiple_packages') {
+                        availablePackages = ['nginx', 'mysql', 'postgresql']
+                        availableServices = ['apache2', 'nginx', 'mysql', 'postgresql']
+                    }
+
+                    // Use input step to dynamically prompt for parameters based on PLAYBOOK
+                    userInput = input(
+                        message: "Select packages and services for ${params.PLAYBOOK}",
+                        parameters: [
+                            choice(name: 'PACKAGES', choices: availablePackages, description: 'Select a package to install'),
+                            choice(name: 'SERVICES', choices: availableServices, description: 'Select a service to restart')
+                        ]
+                    )
+
+                    // Assign user selections to environment variables
+                    env.PACKAGES = userInput.PACKAGES
+                    env.SERVICES = userInput.SERVICES
+                }
+            }
+        }
         stage('Clone Repository') {
             steps {
                 git branch: 'main',
@@ -54,16 +47,12 @@ pipeline {
                         'multiple_packages': 'ansible/multiple_packages.yml'
                     ]
                     // Determine the path based on selected PLAYBOOK
-                    playbookPath = playbookMap[PLAYBOOK]
-
-                    // Get selected values for PACKAGE and SERVICE
-                    selectedPackage = PACKAGES
-                    selectedService = SERVICES
+                    playbookPath = playbookMap[params.PLAYBOOK]
 
                     // Run the Ansible playbook with extra-vars
                     sh """
                     ansible-playbook -i ansible/inventory ${playbookPath} \
-                    --extra-vars "package=${selectedPackage} service=${selectedService}"
+                    --extra-vars "package=${env.PACKAGES} service=${env.SERVICES}"
                     """
                 }
             }
