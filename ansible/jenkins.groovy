@@ -52,7 +52,7 @@ pipeline {
                     // Run the Ansible playbook with extra-vars
                     sh """
                     ansible-playbook -i ansible/inventory ${playbookPath} \
-                    --extra-vars "package=${env.PACKAGES} service=${env.SERVICES}"
+                    --extra-vars "packages=${env.PACKAGES} services=${env.SERVICES}"
                     """
                 }
             }
