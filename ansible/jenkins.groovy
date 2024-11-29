@@ -4,6 +4,8 @@ pipeline {
     environment {
         ANSIBLE_INVENTORY = 'ansible/inventory'  // Relative path to inventory file
         PLAYBOOK = 'ansible/playbook.yml'         // Playbook file name
+        ANSIBLE_HOST_KEY_CHECKING = 'False'
+
     }
 
     stages {
