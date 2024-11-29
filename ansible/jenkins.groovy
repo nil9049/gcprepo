@@ -26,9 +26,9 @@ pipeline {
                         ]
                     )
 
-                    // Ensure PACKAGES and SERVICES are passed as lists (even with a single item)
-                    env.PACKAGES = userInput['PACKAGES']?.split(',')?.collect { it.trim() } ?: []
-                    env.SERVICES = userInput['SERVICES']?.split(',')?.collect { it.trim() } ?: []
+                    // Ensure PACKAGES and SERVICES are passed as lists
+                    env.PACKAGES = userInput['PACKAGES'].split(',').collect { it.trim() }
+                    env.SERVICES = userInput['SERVICES'].split(',').collect { it.trim() }
                 }
             }
         }
