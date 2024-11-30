@@ -30,7 +30,7 @@ pipeline {
         stage('Run Ansible Playbook to Create and Attach Disk') {
             steps {
                 sh '''#!/bin/bash
-                ansible-playbook -i ansible/inventory ansible/playbook3.yml --extra-vars "project_id=$PROJECT_ID vm_name=$VM_NAME disk_name=$DISK_NAME disk_size=$DISK_SIZE zone=$ZONE custom_mount_point=$CUSTOM_MOUNT_POINT google_credentials_path=${WORKSPACE}/gcp-key.json"
+                ansible-playbook -i ansible/inventory ansible/playbook4.yml --extra-vars "project_id=$PROJECT_ID vm_name=$VM_NAME disk_name=$DISK_NAME disk_size=$DISK_SIZE zone=$ZONE custom_mount_point=$CUSTOM_MOUNT_POINT google_credentials_path=${WORKSPACE}/gcp-key.json"
                 '''
             }
         }
