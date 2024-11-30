@@ -23,7 +23,7 @@
         gcloud compute instances attach-disk {{ vm_name }}
         --disk {{ disk_name }}
         --zone {{ zone }}
-        --device-name {{ disk_name }}  # using the same name for disk and device
+        --device-name {{ disk_name }}
       environment:
         GOOGLE_APPLICATION_CREDENTIALS: "{{ google_credentials_path }}"
       delegate_to: localhost
