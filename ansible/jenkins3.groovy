@@ -15,6 +15,15 @@ pipeline {
     }
 
     stages {
+        stage('Checkout Git Repository') {
+            steps {
+                script {
+                    // Clone the repository containing the Ansible playbook
+                    git branch: 'main', url: 'https://your-repository-url.git'
+                }
+            }
+        }
+
         stage('Run Ansible Playbook to Create and Attach Disk') {
             steps {
                 script {
@@ -24,7 +33,7 @@ pipeline {
                     export GOOGLE_APPLICATION_CREDENTIALS=${WORKSPACE}/gcp-key.json
                     
                     # Run the Ansible playbook and pass all required parameters
-                    ansible-playbook  -i inventory playbook3.yml --extra-vars "project_id=$PROJECT_ID vm_name=$VM_NAME disk_name=$DISK_NAME disk_size=$DISK_SIZE zone=$ZONE custom_mount_point=$CUSTOM_MOUNT_POINT"
+                    ansible-playbook -i inventory playbook3.yml --extra-vars "project_id=$PROJECT_ID vm_name=$VM_NAME disk_name=$DISK_NAME disk_size=$DISK_SIZE zone=$ZONE custom_mount_point=$CUSTOM_MOUNT_POINT"
                     '''
                 }
             }
