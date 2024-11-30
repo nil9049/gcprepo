@@ -58,13 +58,13 @@
       become: yes
 
     - name: Get the UUID of the disk
-      command: blkid -o value -s UUID /dev/disk/by-id/google-{{ disk_name }}
+      command: blkid /dev/disk/by-id/google-{{ disk_name }}
       register: disk_uuid
       become: yes
 
     - name: Add entry to /etc/fstab for persistent mounting
       lineinfile:
         path: /etc/fstab
-        line: "{{ disk_uuid.stdout }} {{ custom_mount_point }} ext4 defaults 0 2"
+        line: "UUID={{ disk_uuid.stdout }} {{ custom_mount_point }} ext4 defaults 0 2"
         state: present
       become: yes
