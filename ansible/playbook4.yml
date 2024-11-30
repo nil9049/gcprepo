@@ -7,6 +7,7 @@
       command: gcloud config set project {{ project_id }}
       environment:
         GOOGLE_APPLICATION_CREDENTIALS: "{{ google_credentials_path }}"
+      delegate_to: localhost
 
     - name: Create Persistent Disk in GCP
       command: >
@@ -15,14 +16,17 @@
         --zone={{ zone }}
       environment:
         GOOGLE_APPLICATION_CREDENTIALS: "{{ google_credentials_path }}"
+      delegate_to: localhost
 
-    - name: Attach Persistent Disk to VM
+    - name: Attach Persistent Disk to VM with the same device name as disk
       command: >
         gcloud compute instances attach-disk {{ vm_name }}
-        --disk={{ disk_name }}
-        --zone={{ zone }}
+        --disk {{ disk_name }}
+        --zone {{ zone }}
+        --device-name {{ disk_name }}  # Use the same name for disk and device
       environment:
         GOOGLE_APPLICATION_CREDENTIALS: "{{ google_credentials_path }}"
+      delegate_to: localhost
 
     - name: Find the device name associated with the disk
       command: >
