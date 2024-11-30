@@ -1,0 +1,63 @@
+---
+- name: Create, Attach, and Mount Persistent Disk in GCP
+  hosts: all
+  gather_facts: no
+  tasks:
+    - name: Set GCP project
+      command: gcloud config set project {{ project_id }}
+      environment:
+        GOOGLE_APPLICATION_CREDENTIALS: "{{ ansible_env.WORKSPACE }}/gcp-key.json"
+
+    - name: Create Persistent Disk in GCP
+      command: >
+        gcloud compute disks create {{ disk_name }}
+        --size={{ disk_size }}
+        --zone={{ zone }}
+      environment:
+        GOOGLE_APPLICATION_CREDENTIALS: "{{ ansible_env.WORKSPACE }}/gcp-key.json"
+
+    - name: Attach Persistent Disk to VM
+      command: >
+        gcloud compute instances attach-disk {{ vm_name }}
+        --disk={{ disk_name }}
+        --zone={{ zone }}
+      environment:
+        GOOGLE_APPLICATION_CREDENTIALS: "{{ ansible_env.WORKSPACE }}/gcp-key.json"
+
+    - name: Find the device name associated with the disk
+      command: gcloud compute instances describe {{ vm_name }}
+        --zone={{ zone }} --format="get(disks.deviceName)"
+      register: disk_device_name
+      environment:
+        GOOGLE_APPLICATION_CREDENTIALS: "{{ ansible_env.WORKSPACE }}/gcp-key.json"
+
+    - name: Create mount point for the disk
+      file:
+        path: "/mnt/{{ disk_name }}"
+        state: directory
+      become: yes
+
+    - name: Format the disk (if not already formatted)
+      command: mkfs.ext4 /dev/disk/by-id/google-{{ disk_name }}
+      when: disk_device_name.stdout != ""
+      become: yes
+
+    - name: Mount the disk
+      mount:
+        path: "/mnt/{{ disk_name }}"
+        src: "/dev/disk/by-id/google-{{ disk_name }}"
+        fstype: ext4
+        state: mounted
+      become: yes
+
+    - name: Get the UUID of the disk
+      command: blkid /dev/disk/by-id/google-{{ disk_name }}
+      register: disk_uuid
+      become: yes
+
+    - name: Add entry to /etc/fstab for persistent mounting
+      lineinfile:
+        path: /etc/fstab
+        line: "{{ disk_uuid.stdout }} /mnt/{{ disk_name }} ext4 defaults 0 2"
+        state: present
+      become: yes
