@@ -24,15 +24,27 @@ pipeline {
             }
         }
 
+        stage('Authenticate with GCP') {
+            steps {
+                script {
+                    // Write the service account JSON key to a file in the workspace
+                    writeFile file: "${WORKSPACE}/gcp-key.json", text: "$GOOGLE_CREDENTIALS"
+                    
+                    // Authenticate with GCP using the service account
+                    sh '''
+                    gcloud auth activate-service-account --key-file=${WORKSPACE}/gcp-key.json
+                    '''
+                }
+            }
+        }
+
         stage('Run Ansible Playbook to Create and Attach Disk') {
             steps {
                 script {
-                    // Use Bash explicitly to handle the credentials and run the playbook
+                    // Run the Ansible playbook and pass all required parameters
                     sh '''#!/bin/bash
-                    echo "$GOOGLE_CREDENTIALS" > ${WORKSPACE}/gcp-key.json
                     export GOOGLE_APPLICATION_CREDENTIALS=${WORKSPACE}/gcp-key.json
                     
-                    # Run the Ansible playbook and pass all required parameters
                     ansible-playbook -i ansible/inventory ansible/playbook3.yml --extra-vars "project_id=$PROJECT_ID vm_name=$VM_NAME disk_name=$DISK_NAME disk_size=$DISK_SIZE zone=$ZONE custom_mount_point=$CUSTOM_MOUNT_POINT google_credentials_path=${WORKSPACE}/gcp-key.json"
                     '''
                 }
