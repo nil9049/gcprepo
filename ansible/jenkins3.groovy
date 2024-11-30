@@ -24,7 +24,7 @@ pipeline {
                     export GOOGLE_APPLICATION_CREDENTIALS=${WORKSPACE}/gcp-key.json
                     
                     # Run the Ansible playbook and pass all required parameters
-                    ansible-playbook playbook3.yml --extra-vars "project_id=$PROJECT_ID vm_name=$VM_NAME disk_name=$DISK_NAME disk_size=$DISK_SIZE zone=$ZONE custom_mount_point=$CUSTOM_MOUNT_POINT"
+                    ansible-playbook  -i inventory playbook3.yml --extra-vars "project_id=$PROJECT_ID vm_name=$VM_NAME disk_name=$DISK_NAME disk_size=$DISK_SIZE zone=$ZONE custom_mount_point=$CUSTOM_MOUNT_POINT"
                     '''
                 }
             }
