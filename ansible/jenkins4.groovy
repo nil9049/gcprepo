@@ -11,38 +11,32 @@ pipeline {
     }
 
     environment {
-service_account =  'disk-manager-service-account@influential-rex-442613-b4.iam.gserviceaccount.com'
+        SERVICE_ACCOUNT = 'disk-manager-service-account@influential-rex-442613-b4.iam.gserviceaccount.com'
     }
-    
-    stages {
-     stage('Setup Environment') {
-      steps { withCredentials([file(credentialsId: "my-key", variable: 'GC_KEY')]) { 
-        sh """ #!/bin/bash
-        cp $GC_KEY ${WORKSPACE}/creds.json
-         """
-     }
 
-      }   
-        
+    stages {
+        stage('Setup Environment') {
+            steps {
+                withCredentials([file(credentialsId: "my-key", variable: 'GC_KEY')]) {
+                    sh '''#!/bin/bash
+                    cp "$GC_KEY" "${WORKSPACE}/gcp-key.json"
+                    '''
+                }
+            }
+        }
 
         stage('Run Ansible Playbook to Create and Attach Disk') {
             steps {
-                script {
-                    // Run the Ansible playbook and pass all required parameters
-                    sh '''#!/bin/bash
-                    
-                    ansible-playbook -i ansible/inventory ansible/playbook3.yml --extra-vars "project_id=$PROJECT_ID vm_name=$VM_NAME disk_name=$DISK_NAME disk_size=$DISK_SIZE zone=$ZONE custom_mount_point=$CUSTOM_MOUNT_POINT google_credentials_path=${WORKSPACE}/gcp-key.json"
-                    '''
-                }
+                sh '''#!/bin/bash
+                ansible-playbook -i ansible/inventory ansible/playbook3.yml --extra-vars "project_id=$PROJECT_ID vm_name=$VM_NAME disk_name=$DISK_NAME disk_size=$DISK_SIZE zone=$ZONE custom_mount_point=$CUSTOM_MOUNT_POINT google_credentials_path=${WORKSPACE}/gcp-key.json"
+                '''
             }
         }
     }
 
     post {
         always {
-            cleanWs()  // Clean up workspace after pipeline execution
+            cleanWs() // Clean up workspace after pipeline execution
         }
     }
-}
-
 }
