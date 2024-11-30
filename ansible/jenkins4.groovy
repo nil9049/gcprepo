@@ -20,6 +20,8 @@ pipeline {
                 withCredentials([file(credentialsId: "my-key", variable: 'GC_KEY')]) {
                     sh '''#!/bin/bash
                     cp "$GC_KEY" "${WORKSPACE}/gcp-key.json"
+                    gcloud auth activate-service-account --key-file=${WORKSPACE}/creds.json
+
                     '''
                 }
             }
