@@ -19,7 +19,7 @@ pipeline {
                 script {
                     // Decode the Base64-encoded GCP service account credentials and save them to a file
                     sh '''
-                    echo $GOOGLE_CREDENTIALS | base64 --decode > ${WORKSPACE}/gcp-key.json
+                    echo $GOOGLE_CREDENTIALS  > ${WORKSPACE}/gcp-key.json
                     export GOOGLE_APPLICATION_CREDENTIALS=${WORKSPACE}/gcp-key.json
                     ansible-playbook create_and_attach_disk.yml --extra-vars "project_id=${params.PROJECT_ID} vm_name=${params.VM_NAME} disk_name=${params.DISK_NAME} disk_size=${params.DISK_SIZE} zone=${params.ZONE}"
                     '''
