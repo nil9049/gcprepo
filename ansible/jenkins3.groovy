@@ -32,6 +32,10 @@ pipeline {
                     
                     // Authenticate with GCP using the service account
                     sh '''
+                
+                     gcloud auth activate-service-account --key-file=${WORKSPACE}/gcp-key.json --scopes=https://www.googleapis.com/auth/cloud-platform
+
+
                     gcloud auth activate-service-account --key-file=${WORKSPACE}/gcp-key.json
                     '''
                 }
