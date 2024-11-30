@@ -51,14 +51,14 @@
 
     - name: Mount the disk
       mount:
-        path: "/mnt/{{ disk_name }}"
+        path: "{{ custom_mount_point }}"
         src: "/dev/disk/by-id/google-{{ disk_name }}"
         fstype: ext4
         state: mounted
       become: yes
 
     - name: Get the UUID of the disk
-      command: blkid /dev/disk/by-id/google-{{ disk_name }}
+      command: blkid -o value -s UUID /dev/disk/by-id/google-{{ disk_name }}
       register: disk_uuid
       become: yes
 
