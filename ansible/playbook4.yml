@@ -39,7 +39,7 @@
       delegate_to: localhost
 
     - name: Format the disk (if not already formatted)
-      command: mkfs.ext4 /dev/disk/by-id/google-{{ disk_device_name.stdout }}
+      command: mkfs.ext4 /dev/disk/by-id/google-{{ disk_name }}
       when: disk_device_name.stdout != ""
       become: yes
 
@@ -52,19 +52,19 @@
     - name: Mount the disk
       mount:
         path: "/mnt/{{ disk_name }}"
-        src: "/dev/disk/by-id/google-{{ disk_device_name.stdout }}"
+        src: "/dev/disk/by-id/google-{{ disk_name }}"
         fstype: ext4
         state: mounted
       become: yes
 
     - name: Get the UUID of the disk
-      command: blkid /dev/disk/by-id/google-{{ disk_device_name.stdout }}
+      command: blkid /dev/disk/by-id/google-{{ disk_name }}
       register: disk_uuid
       become: yes
 
     - name: Add entry to /etc/fstab for persistent mounting
       lineinfile:
         path: /etc/fstab
-        line: "{{ disk_uuid.stdout }} /mnt/{{ disk_name }} ext4 defaults 0 2"
+        line: "{{ disk_uuid.stdout }} {{ custom_mount_point }} ext4 defaults 0 2"
         state: present
       become: yes
