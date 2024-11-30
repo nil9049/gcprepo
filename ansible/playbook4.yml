@@ -23,7 +23,7 @@
         gcloud compute instances attach-disk {{ vm_name }}
         --disk {{ disk_name }}
         --zone {{ zone }}
-        --device-name {{ disk_name }}  # Use the same name for disk and device
+        --device-name {{ disk_name }}  # using the same name for disk and device
       environment:
         GOOGLE_APPLICATION_CREDENTIALS: "{{ google_credentials_path }}"
       delegate_to: localhost
@@ -39,7 +39,7 @@
       delegate_to: localhost
 
     - name: Format the disk (if not already formatted)
-      command: mkfs.ext4 /dev/disk/by-id/{{ disk_device_name.stdout }}
+      command: mkfs.ext4 /dev/disk/by-id/google-{{ disk_device_name.stdout }}
       when: disk_device_name.stdout != ""
       become: yes
 
@@ -52,13 +52,13 @@
     - name: Mount the disk
       mount:
         path: "/mnt/{{ disk_name }}"
-        src: "/dev/disk/by-id/{{ disk_device_name.stdout }}"
+        src: "/dev/disk/by-id/google-{{ disk_device_name.stdout }}"
         fstype: ext4
         state: mounted
       become: yes
 
     - name: Get the UUID of the disk
-      command: blkid /dev/disk/by-id/{{ disk_device_name.stdout }}
+      command: blkid /dev/disk/by-id/google-{{ disk_device_name.stdout }}
       register: disk_uuid
       become: yes
 
