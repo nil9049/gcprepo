@@ -54,11 +54,11 @@
         path: "{{ custom_mount_point }}"
         src: "/dev/disk/by-id/google-{{ disk_name }}"
         fstype: ext4
-        state: mounted
+        state: present
       become: yes
 
     - name: Get the UUID of the disk
-      command: blkid /dev/disk/by-id/google-{{ disk_name }}
+      command: blkid /dev/disk/by-id/google-{{  disk_name }}
       register: disk_uuid
       become: yes
 
@@ -67,4 +67,8 @@
         path: /etc/fstab
         line: "UUID={{ disk_uuid.stdout }} {{ custom_mount_point }} ext4 defaults 0 2"
         state: present
+      become: yes
+    
+    - name: Mount all entries in /etc/fstab
+      command: mount -a && systemctl daemon-reload
       become: yes
