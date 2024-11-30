@@ -19,7 +19,7 @@ pipeline {
             steps {
                 script {
                     // Clone the repository containing the Ansible playbook
-                    git branch: 'main', url: 'https://your-repository-url.git'
+                    git branch: 'main', url: 'https://github.com/nil9049/gcprepo.git'
                 }
             }
         }
