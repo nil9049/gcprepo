@@ -6,7 +6,7 @@
     - name: Set GCP project
       command: gcloud config set project {{ project_id }}
       environment:
-        GOOGLE_APPLICATION_CREDENTIALS: "{{ ansible_env.WORKSPACE }}/gcp-key.json"
+        GOOGLE_APPLICATION_CREDENTIALS: "{{ google_credentials_path }}"
 
     - name: Create Persistent Disk in GCP
       command: >
@@ -14,7 +14,7 @@
         --size={{ disk_size }}
         --zone={{ zone }}
       environment:
-        GOOGLE_APPLICATION_CREDENTIALS: "{{ ansible_env.WORKSPACE }}/gcp-key.json"
+        GOOGLE_APPLICATION_CREDENTIALS: "{{ google_credentials_path }}"
 
     - name: Attach Persistent Disk to VM
       command: >
@@ -22,14 +22,14 @@
         --disk={{ disk_name }}
         --zone={{ zone }}
       environment:
-        GOOGLE_APPLICATION_CREDENTIALS: "{{ ansible_env.WORKSPACE }}/gcp-key.json"
+        GOOGLE_APPLICATION_CREDENTIALS: "{{ google_credentials_path }}"
 
     - name: Find the device name associated with the disk
       command: gcloud compute instances describe {{ vm_name }}
         --zone={{ zone }} --format="get(disks.deviceName)"
       register: disk_device_name
       environment:
-        GOOGLE_APPLICATION_CREDENTIALS: "{{ ansible_env.WORKSPACE }}/gcp-key.json"
+        GOOGLE_APPLICATION_CREDENTIALS: "{{ google_credentials_path }}"
 
     - name: Create mount point for the disk
       file:
