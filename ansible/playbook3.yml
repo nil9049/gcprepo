@@ -33,7 +33,7 @@
         register: disk_device_name
         environment:
           GOOGLE_APPLICATION_CREDENTIALS: "{{ google_credentials_path }}"
-  
+        delegate_to: localhost
       - name: Create custom mount point for the disk
         file:
           path: "{{ custom_mount_point }}"
