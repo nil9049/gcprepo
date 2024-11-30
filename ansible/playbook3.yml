@@ -31,9 +31,9 @@
       environment:
         GOOGLE_APPLICATION_CREDENTIALS: "{{ google_credentials_path }}"
 
-    - name: Create mount point for the disk
+    - name: Create custom mount point for the disk
       file:
-        path: "/mnt/{{ disk_name }}"
+        path: "{{ custom_mount_point }}"
         state: directory
       become: yes
 
