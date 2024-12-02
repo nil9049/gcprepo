@@ -43,17 +43,35 @@
       when: disk_device_name.stdout != ""
       become: yes
 
-    - name: Create custom mount point for the disk
+    - name: Set user and group based on VM name
+      set_fact:
+        user_owner: "{{ 'rtminst' if 'mecl' in vm_name else ('rwsinst' if 'rws' in vm_name else 'default_user') }}"
+        group_owner: "{{ 'db2diam' if 'mecl' in vm_name else ('db2diam' if 'rws' in vm_name else 'default_group') }}"
+
+    - name: Create custom mount point for the disk with user and group ownership
       file:
-        path: "{{ custom_mount_point }}"
-        state: directory
-      become: yes
+       path: "{{ custom_mount_point }}"
+       state: directory
+       owner: "{{ user_owner }}"
+       group: "{{ group_owner }}"
+       become: yes
+
 
    
 
     - name: Get the UUID of the disk
       command: blkid -s UUID -o value /dev/disk/by-id/google-{{  disk_name }}
       register: disk_uuid
+      become: yes
+        
+    - name: Comment out existing entry for the mount point in /etc/fstab
+      lineinfile:
+        path: /etc/fstab
+        regexp: "^.*{{ custom_mount_point }}.*$"
+        line: "# {{ item }}"
+        state: present
+      with_lines: "{{ lookup('lines', '/etc/fstab') }}"
+      when: item | search(custom_mount_point)
       become: yes
 
     - name: Add entry to /etc/fstab for persistent mounting
