@@ -45,8 +45,8 @@
 
     - name: Set user and group based on VM name
       set_fact:
-        user_owner: "{{ 'rtminst' if 'mecl' in vm_name else ('rwsinst' if 'rws' in vm_name else 'default_user') }}"
-        group_owner: "{{ 'db2diam' if 'mecl' in vm_name else ('db2diam' if 'rws' in vm_name else 'default_group') }}"
+        user_owner: "{{ 'rtminst' if 'mwcl' in vm_name else ('rwsinst' if 'rws' in vm_name else 'default_user') }}"
+        group_owner: "{{ 'db2diam' if 'mwcl' in vm_name else ('db2diam' if 'rws' in vm_name else 'default_group') }}"
 
     - name: Create custom mount point for the disk with user and group ownership
       file:
