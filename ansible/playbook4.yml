@@ -43,18 +43,19 @@
       when: disk_device_name.stdout != ""
       become: yes
 
-    - name: Set user and group based on VM name
-      set_fact:
-        user_owner: "{{ 'rtminst' if 'mwcl' in vm_name else ('rwsinst' if 'rws' in vm_name else 'default_user') }}"
-        group_owner: "{{ 'db2diam' if 'mwcl' in vm_name else ('db2diam' if 'rws' in vm_name else 'default_group') }}"
+      - name: Check if the custom mount point exists
+        stat:
+         path: "{{ custom_mount_point }}"
+        register: mount_point_stat
 
-    - name: Create custom mount point for the disk with user and group ownership
-      file:
-       path: "{{ custom_mount_point }}"
-       state: directory
-       owner: "{{ user_owner }}"
-       group: "{{ group_owner }}"
-       become: yes
+      - name: Create custom mount point for the disk with user and group ownership
+        file:
+         path: "{{ custom_mount_point }}"
+         state: directory
+         owner: "{{ 'rtminst' if 'mwcl' in vm_name else 'rwsinst' }}"
+         group: "{{ 'db2diam' }}"
+        when: mount_point_stat.stat.exists == false
+        become: yes
 
 
    
