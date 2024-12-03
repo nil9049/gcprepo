@@ -9,21 +9,35 @@
         GOOGLE_APPLICATION_CREDENTIALS: "{{ google_credentials_path }}"
       delegate_to: localhost
 
-    - name: Create Persistent Disk in GCP
+    - name: Check if Persistent Disk already exists in GCP
+      command: gcloud compute disks describe {{ disk_name }} --zone={{ zone }} --format="get(name)"
+      register: disk_exists
+      ignore_errors: yes
+      delegate_to: localhost
+
+    - name: Create Persistent Disk in GCP (if not already created)
       command: >
         gcloud compute disks create {{ disk_name }}
         --size={{ disk_size }}
         --zone={{ zone }}
       environment:
         GOOGLE_APPLICATION_CREDENTIALS: "{{ google_credentials_path }}"
+      when: disk_exists.rc != 0
       delegate_to: localhost
 
-    - name: Attach Persistent Disk to VM with the same device name as disk
+    - name: Check if Persistent Disk is already attached to the VM
+      command: gcloud compute instances describe {{ vm_name }} --zone={{ zone }} --format="get(disks.deviceName)"
+      register: disk_attached
+      ignore_errors: yes
+      delegate_to: localhost
+
+    - name: Attach Persistent Disk to VM (if not already attached)
       command: >
         gcloud compute instances attach-disk {{ vm_name }}
         --disk {{ disk_name }}
         --zone {{ zone }}
         --device-name {{ disk_name }}
+      when: disk_attached.rc != 0
       environment:
         GOOGLE_APPLICATION_CREDENTIALS: "{{ google_credentials_path }}"
       delegate_to: localhost
@@ -40,47 +54,45 @@
 
     - name: Format the disk (if not already formatted)
       command: mkfs.ext4 /dev/disk/by-id/google-{{ disk_name }}
-      when: disk_device_name.stdout != ""
+      when: disk_device_name.stdout != "" and disk_device_name.stdout != "/dev/disk/by-id/google-{{ disk_name }}"
       become: yes
 
     - name: Check if the custom mount point exists
       stat:
-         path: "{{ custom_mount_point }}"
+        path: "{{ custom_mount_point }}"
       register: mount_point_stat
 
     - name: Create custom mount point for the disk with user and group ownership
       file:
-         path: "{{ custom_mount_point }}"
-         state: directory
-         owner: "{{ 'rtminst' if 'mwcl' in vm_name else 'rwsinst' }}"
-         group: "{{ 'db2diam' }}"
+        path: "{{ custom_mount_point }}"
+        state: directory
+        owner: "{{ 'rtminst' if 'mwcl' in vm_name else 'rwsinst' }}"
+        group: "{{ 'db2diam' }}"
       when: mount_point_stat.stat.exists == false
       become: yes
 
-
-   
-
     - name: Get the UUID of the disk
-      command: blkid -s UUID -o value /dev/disk/by-id/google-{{  disk_name }}
+      command: blkid -s UUID -o value /dev/disk/by-id/google-{{ disk_name }}
       register: disk_uuid
       become: yes
-        
+
     - name: Comment out existing entry for the mount point in /etc/fstab
       lineinfile:
-       path: /etc/fstab
-       regexp: "^.*{{ custom_mount_point }}.*$"
-       line: "# {{ custom_mount_point }} (commented by Ansible)"
-       state: present
+        path: /etc/fstab
+        regexp: "^.*{{ custom_mount_point }}.*$"
+        line: "# {{ custom_mount_point }} (commented by Ansible)"
+        state: present
+      when: mount_point_stat.stat.exists == true
       become: yes
-
 
     - name: Add entry to /etc/fstab for persistent mounting
       lineinfile:
         path: /etc/fstab
         line: "UUID={{ disk_uuid.stdout }} {{ custom_mount_point }} ext4 defaults 0 2"
         state: present
+      when: mount_point_stat.stat.exists == true
       become: yes
-    
+
     - name: Mount all entries in /etc/fstab
       command: mount -a && systemctl daemon-reload
       become: yes
