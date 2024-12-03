@@ -67,13 +67,12 @@
         
     - name: Comment out existing entry for the mount point in /etc/fstab
       lineinfile:
-        path: /etc/fstab
-        regexp: "^.*{{ custom_mount_point }}.*$"
-        line: "# {{ item }}"
-        state: present
-      with_lines: "{{ lookup('lines', '/etc/fstab') }}"
-      when: item | search(custom_mount_point)
+       path: /etc/fstab
+       regexp: "^.*{{ custom_mount_point }}.*$"
+       line: "# {{ custom_mount_point }} (commented by Ansible)"
+       state: present
       become: yes
+
 
     - name: Add entry to /etc/fstab for persistent mounting
       lineinfile:
