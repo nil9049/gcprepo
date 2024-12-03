@@ -43,19 +43,19 @@
       when: disk_device_name.stdout != ""
       become: yes
 
-      - name: Check if the custom mount point exists
-        stat:
+    - name: Check if the custom mount point exists
+      stat:
          path: "{{ custom_mount_point }}"
-        register: mount_point_stat
+      register: mount_point_stat
 
-      - name: Create custom mount point for the disk with user and group ownership
-        file:
+    - name: Create custom mount point for the disk with user and group ownership
+      file:
          path: "{{ custom_mount_point }}"
          state: directory
          owner: "{{ 'rtminst' if 'mwcl' in vm_name else 'rwsinst' }}"
          group: "{{ 'db2diam' }}"
-        when: mount_point_stat.stat.exists == false
-        become: yes
+      when: mount_point_stat.stat.exists == false
+      become: yes
 
 
    
